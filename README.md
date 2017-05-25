@@ -1,6 +1,6 @@
 # SMrecorder
 
-This is script to automate the recording of public webcam shows from the streamate (and other naiadsystems based sites). 
+This is script to automate the recording of public webcam shows from streamate (and other naiadsystems based sites). 
 
 It requires Python3.5 or later. 
 
