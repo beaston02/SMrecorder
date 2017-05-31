@@ -19,6 +19,7 @@ def getOnlineModels():
             models = model.split()
             for theModel in models:
                 wanted.append(theModel.lower())
+    f.close()
     r = requests.get('http://streamate.com', headers={
         "User-Agent": UserAgent})
     cookie = r.headers['Set-Cookie']
@@ -98,6 +99,7 @@ def startRecording(model):
                                 f.write(data)
                             except:
                                 recording.remove(model.lower())
+                                f.close()
                                 return ()
 
     except:
