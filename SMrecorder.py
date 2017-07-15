@@ -1,17 +1,20 @@
-import urllib.request, json, time, requests, threading, datetime, os, sys
+import urllib.request, json, time, requests, threading, datetime, os, sys, configparser
 from websocket import create_connection
 from livestreamer import Livestreamer
 
-#specify path to save to ie "/Users/Joe/streamate"
-save_directory = "/Users/Joe/streamate"
-#specify the path to the wishlist file ie "/Users/Joe/streamate/wanted.txt"
-wishlist = "/Users/Joe/streamate/wanted.txt"
+Config = configparser.ConfigParser()
+Config.read(sys.path[0] + "/config.conf")
+save_directory = Config.get('paths', 'save_directory')
+wishlist = Config.get('paths', 'wishlist')
+interval = int(Config.get('settings', 'checkInterval'))
 
 if not os.path.exists("{path}".format(path=save_directory)):
     os.makedirs("{path}".format(path=save_directory))
 recording = []
 UserAgent = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Mobile Safari/537.36"
+cookie = ""
 def getOnlineModels():
+    global cookie
     online = []
     wanted = []
     with open(wishlist) as f:
@@ -20,13 +23,14 @@ def getOnlineModels():
             for theModel in models:
                 wanted.append(theModel.lower())
     f.close()
-    r = requests.get('http://streamate.com', headers={
-        "User-Agent": UserAgent})
-    cookie = r.headers['Set-Cookie']
+    if cookie == "":
+        r = requests.get('http://streamate.com', headers={
+            "User-Agent": UserAgent})
+        cookie = r.headers['Set-Cookie']
     offline = False
     page = 1
     while offline == False:
-        req = urllib.request.Request("https://streamate.com/api/search/list?skin_search_kids=0&exact=1&page_number={}&results_per_page=500&sort_order=default".format(page))
+        req = urllib.request.Request("https://api.naiadsystems.com/search/V1/list?skin_search_kids=0&exact=1&page_number={}&results_per_page=500&sort_order=default".format(page))
         req.add_header("User-Agent", UserAgent)
         req.add_header('connection', 'keep-alive')
         req.add_header('cookie', cookie)
@@ -110,7 +114,7 @@ def startRecording(model):
 if __name__ == '__main__':
     while True:
         getOnlineModels()
-        for i in range(20, 0, -1):
+        for i in range(interval, 0, -1):
             sys.stdout.write("\033[K")
             print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
             sys.stdout.write("\033[K")
