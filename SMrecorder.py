@@ -15,6 +15,7 @@ UserAgent = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/
 cookie = ""
 def getOnlineModels():
     global cookie
+    global nonApiModels
     online = []
     wanted = []
     with open(wishlist) as f:
@@ -36,21 +37,29 @@ def getOnlineModels():
         req.add_header('cookie', cookie)
         req.add_header('Host', 'streamate.com')
         req.add_header('Referer', 'https://streamate.com/?')
-        resp = urllib.request.urlopen(req)
-        result = resp.read()
-        result = json.loads(result.decode())
-        for model in result['Results']:
-            if model['LiveStatus'] != 'offline':
-                if model['InExclusiveShow'] is False and model['GoldShow'] is False:
-                    online.append(model['Nickname'].lower())
-                    if model['Nickname'].lower() not in recording and model['Nickname'].lower() in wanted:
-                        model = model['Nickname']
-                        thread = threading.Thread(target=startRecording, args=(model,))
-                        thread.start()
-            else:
-                offline = True
-                break
-        page = page + 1
+        try:
+            resp = urllib.request.urlopen(req)
+            result = resp.read()
+            result = json.loads(result.decode())
+            for model in result['Results']:
+                if model['LiveStatus'] != 'offline':
+                    if model['InExclusiveShow'] is False and model['GoldShow'] is False:
+                        online.append(model['Nickname'].lower())
+                        if model['Nickname'].lower() not in recording and model['Nickname'].lower() in wanted:
+                            model = model['Nickname']
+                            thread = threading.Thread(target=startRecording, args=(model,))
+                            thread.start()
+                else:
+                    offline = True
+                    break
+            page = page + 1
+        except urllib.error.URLError:
+            pass
+    for model in [m for m in nonApiModels if m not in recording]:
+        result = requests.get("https://streamate.com/ajax/config/?name={}&sakey=&sk=streamate.com&userid=0&version=2.3.1&ajax=1".format(model),headers={"User-Agent": UserAgent}).json()
+        if result['stream']['streamId'] is not '0':
+            thread = threading.Thread(target=startRecording, args=(model,))
+            thread.start()
 
 def startRecording(model):
     try:
@@ -109,15 +118,34 @@ def startRecording(model):
     except:
         recording.remove(model.lower())
 
-
+def findNonApiModels():
+    sys.stdout.write("\033[K")
+    print("Checking which models will not be listed as online in the API", end="\r")
+    wanted = []
+    nonApiModels = []
+    with open(wishlist) as f:
+        for model in f:
+            models = model.split()
+            for theModel in models:
+                wanted.append(theModel.lower())
+    f.close()
+    for model in wanted:
+        result = requests.get('https://streamate.com/search.php?q={}&sssjson=1'.format(model), headers={"User-Agent" : UserAgent}).json()['Results']
+        if model.lower() not in [m['Nickname'].lower() for m in result]:
+            print(model, 'not found in search')
+            nonApiModels.append(model)
+    return(nonApiModels)
 
 if __name__ == '__main__':
     while True:
-        getOnlineModels()
-        for i in range(interval, 0, -1):
-            sys.stdout.write("\033[K")
-            print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
-            sys.stdout.write("\033[K")
-            print("the following models are being recorded: {}".format(recording), end="\r")
-            time.sleep(1)
-            sys.stdout.write("\033[F")
+        nonApiModels = findNonApiModels()
+        checked = int(time.time())
+        while int(time.time()) < int(time.time()) * 60 * 60 * 4:
+            getOnlineModels()
+            for i in range(interval, 0, -1):
+                sys.stdout.write("\033[K")
+                print("{} model(s) are being recorded. Next check in {} seconds".format(len(recording), i))
+                sys.stdout.write("\033[K")
+                print("the following models are being recorded: {}".format(recording), end="\r")
+                time.sleep(1)
+                sys.stdout.write("\033[F")
