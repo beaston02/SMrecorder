@@ -33,6 +33,7 @@ def getOnlineModels():
             thread.start()
 
 def startRecording(model):
+    file_path = "{path}/{model}/{st}_{model}.mp4".format(path=settings['save_directory'], model=model,st=st)
     try:
         recording.append(model.lower())
         session = Livestreamer()
@@ -45,7 +46,6 @@ def startRecording(model):
         fd = stream.open()
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime("%Y.%m.%d_%H.%M.%S")
-        file_path = "{path}/{model}/{st}_{model}.mp4".format(path=settings['save_directory'], model=model,st=st)
         directory = file_path.rsplit('/', 1)[0] + '/'
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -59,7 +59,7 @@ def startRecording(model):
 
     finally:
         recording.remove(model.lower())
-        if settings['post_processing_command'] and file_path:
+        if settings['post_processing_command']:
             processing_queue.put({'model': model, 'path': file_path})
 
 def findNonApiModels():
