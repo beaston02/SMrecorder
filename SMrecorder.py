@@ -58,8 +58,9 @@ def startRecording(model):
                     break
 
     finally:
-        recording.remove(model.lower())
-        if settings['post_processing_command'] and file_path:
+        if model.lower() in recording:
+            recording.remove(model.lower())
+        if settings['post_processing_command']:
             processing_queue.put({'model': model, 'path': file_path})
 
 def find_non_api_models():
