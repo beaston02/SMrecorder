@@ -23,7 +23,7 @@ def getOnlineModels():
     global nonApiModels
     wanted = get.wanted(settings['wishlist'])
     nonApiModels = list(set(nonApiModels) - set(wanted))
-    for model in get.onlineModels():
+    for model in get.online_models():
         if model.lower() not in recording and model.lower() in wanted:
             thread = threading.Thread(target=startRecording, args=(model,))
             thread.start()
@@ -33,7 +33,6 @@ def getOnlineModels():
             thread.start()
 
 def startRecording(model):
-    file_path = "{path}/{model}/{st}_{model}.mp4".format(path=settings['save_directory'], model=model,st=st)
     try:
         recording.append(model.lower())
         session = Livestreamer()
@@ -46,6 +45,7 @@ def startRecording(model):
         fd = stream.open()
         ts = time.time()
         st = datetime.datetime.fromtimestamp(ts).strftime("%Y.%m.%d_%H.%M.%S")
+        file_path = "{path}/{model}/{st}_{model}.mp4".format(path=settings['save_directory'], model=model,st=st)
         directory = file_path.rsplit('/', 1)[0] + '/'
         if not os.path.exists(directory):
             os.makedirs(directory)
@@ -59,14 +59,14 @@ def startRecording(model):
 
     finally:
         recording.remove(model.lower())
-        if settings['post_processing_command']:
+        if settings['post_processing_command'] and file_path:
             processing_queue.put({'model': model, 'path': file_path})
 
-def findNonApiModels():
+def find_non_api_models():
     while True:
         wanted = get.wanted(settings['wishlist'])
         for model in set(wanted) - set(nonApiModels):
-            if get.modelApiCheck(model):
+            if get.model_api_check(model):
                 nonApiModels.append(model)
         time.sleep(21600)
 def postprocess():
@@ -89,7 +89,7 @@ if __name__ == '__main__':
             t = threading.Thread(target=postprocess)
             postprocessing_workers.append(t)
             t.start()
-    t = threading.Thread(target=findNonApiModels)
+    t = threading.Thread(target=find_non_api_models)
     t.start()
     while True:
         getOnlineModels()
