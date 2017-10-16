@@ -34,12 +34,11 @@ def getOnlineModels():
 
 def startRecording(model):
     try:
-        recording.append(model.lower())
         session = Livestreamer()
         url = get.stream(model)
         if url == 'Offline':
-            recording.remove(model.lower())
             return
+        recording.append(model.lower())
         streams = session.streams("hlsvariant://" + url)
         stream = streams["best"]
         fd = stream.open()
