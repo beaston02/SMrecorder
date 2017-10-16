@@ -24,7 +24,10 @@ class get:
                 pass
 
     def stream(self, model):
-        model_info = requests.get("https://streamate.com/ajax/config/?name={}&sakey=&sk=streamate.com&userid=0&version=2.3.1&ajax=1".format(model)).json()
+        try:
+            model_info = requests.get("https://streamate.com/ajax/config/?name={}&sakey=&sk=streamate.com&userid=0&version=2.3.1&ajax=1".format(model)).json()
+        except:
+            return('Offline')
         if model_info['stream']['serverId'] != '0':
 
             URL = model_info['stream']['nodeHost'] + "/socket.io/?performerid=" + str(
