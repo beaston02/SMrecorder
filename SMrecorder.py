@@ -1,4 +1,8 @@
 import time, threading, datetime, os, sys, configparser
+if os.name == 'nt':
+    import ctypes
+    kernel32 = ctypes.windll.kernel32
+    kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
 import SM
 from livestreamer import Livestreamer
 from subprocess import call
