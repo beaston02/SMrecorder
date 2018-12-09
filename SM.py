@@ -2,7 +2,7 @@ import requests
 import json
 from websocket import create_connection
 
-UserAgent = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Mobile Safari/537.36"
+UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
 class get:
     def online_models(self):
         r = requests.session()
@@ -10,11 +10,11 @@ class get:
         page = 1
         while True:
             try:
-                result = r.get("https://streamate.com/api/search/list?skin_search_kids=0&exact=100&page_number={}&downboost_paid=true".format(
+                result = r.get("https://streamate.com/?sssjson=1&skin_search_kids=0&exact=100&pagenum={}&downboost_paid=true".format(
                     page), headers={"User-Agent": UserAgent}).json()
                 for model in result['Results']:
                     if model['LiveStatus'] != 'offline':
-                        if model['InExclusiveShow'] is False and model['GoldShow'] is False:
+                        if (model['InExclusiveShow'] is False or model['InExclusiveShow'] is 0) and (model['GoldShow'] is False or model['GoldShow'] is 0):
                             online.append(model['Nickname'].lower())
 
                     else:
